@@ -25,7 +25,7 @@ WORKDIR /app
 
 # Install only production dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy built app and prisma from builder
 COPY --from=builder /app/dist ./dist
