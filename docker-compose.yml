@@ -1,0 +1,60 @@
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: padelflow_db
+    restart: unless-stopped
+    ports:
+      - "7432:5432"
+    environment:
+      POSTGRES_USER: padelflow
+      POSTGRES_PASSWORD: padelflow_password
+      POSTGRES_DB: padelflow_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U padelflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+    container_name: padelflow_backend
+    restart: unless-stopped
+    ports:
+      - "7001:3000"
+    environment:
+      DATABASE_URL: "postgresql://padelflow:padelflow_password@postgres:5432/padelflow_db?schema=public"
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      JWT_EXPIRES_IN: "7d"
+      PORT: 3000
+      NODE_ENV: production
+      FRONTEND_URL: ${FRONTEND_URL:-https://padelflow.bertium.net}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend React App
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - API_KEY=${GEMINI_API_KEY}
+    container_name: padelflow_frontend
+    ports:
+      - "7000:80"
+    restart: unless-stopped
+    environment:
+      - API_KEY=${GEMINI_API_KEY}
+      - VITE_API_URL=${API_URL:-https://api.padelflow.bertium.net}
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

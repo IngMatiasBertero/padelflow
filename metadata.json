@@ -1,0 +1,8 @@
+{
+  "name": "PadelFlow - Sistema de Reservas",
+  "description": "Plataforma multi-tenant para gestión de complejos deportivos con reservas en tiempo real y análisis de demanda mediante IA.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

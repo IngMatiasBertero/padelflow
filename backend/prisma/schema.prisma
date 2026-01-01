@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENTE
+  DUENO
+  ADMIN
+}
+
+enum TurnoEstado {
+  DISPONIBLE
+  RESERVADO
+  PENDIENTE
+  BLOQUEADO
+  CANCELADO
+}
+
+enum TipoCancha {
+  TECHADA
+  DESCUBIERTA
+  BLINDEX
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  nombre    String
+  telefono  String
+  rol       UserRole @default(CLIENTE)
+  avatar    String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  complejos Complejo[] // Si es dueño, puede tener múltiples complejos
+  turnos    Turno[]    // Si es cliente, puede tener múltiples reservas
+
+  @@map("users")
+}
+
+model Complejo {
+  id                String   @id @default(cuid())
+  nombre            String
+  ciudad            String
+  direccion         String
+  telefono          String
+  horario_apertura  String   // formato HH:MM
+  horario_cierre    String   // formato HH:MM
+  imagen            String?
+  rating            Float    @default(0)
+  reviewsCount      Int      @default(0)
+  activo            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relación con el dueño
+  owner_id String
+  owner    User   @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+
+  // Relaciones
+  canchas Cancha[]
+
+  @@map("complejos")
+}
+
+model Cancha {
+  id          String      @id @default(cuid())
+  nombre      String
+  tipo        TipoCancha
+  precio_hora Int         // precio en pesos (4800, 4200, etc)
+  activa      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relación con el complejo
+  complejo_id String
+  complejo    Complejo @relation(fields: [complejo_id], references: [id], onDelete: Cascade)
+
+  // Relaciones
+  turnos Turno[]
+
+  @@map("canchas")
+}
+
+model Turno {
+  id             String       @id @default(cuid())
+  fecha          DateTime     // fecha del turno
+  hora_inicio    String       // formato HH:MM
+  hora_fin       String       // formato HH:MM
+  estado         TurnoEstado  @default(DISPONIBLE)
+  precio         Int          // precio total del turno
+  sena_pagada    Boolean      @default(false)
+  sena_monto     Int?         // monto de la seña pagada
+  pago_completo  Boolean      @default(false)
+  observaciones  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relación con la cancha
+  cancha_id String
+  cancha    Cancha @relation(fields: [cancha_id], references: [id], onDelete: Cascade)
+
+  // Relación con el cliente (opcional, puede estar disponible)
+  cliente_id String?
+  cliente    User?   @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
+
+  // Datos de pago (Mercado Pago)
+  mp_payment_id       String?
+  mp_preference_id    String?
+  mp_external_reference String?
+
+  @@map("turnos")
+  @@index([fecha, hora_inicio])
+  @@index([cancha_id, fecha])
+}
