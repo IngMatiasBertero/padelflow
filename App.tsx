@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import AuthPage from './components/AuthPage';
 import OwnerDashboard from './components/OwnerDashboard';
@@ -7,6 +7,7 @@ import OwnerCalendar from './components/OwnerCalendar';
 import ClientExplore from './components/ClientExplore';
 import ClientComplexDetail from './components/ClientComplexDetail';
 import ClientBookingHistory from './components/ClientBookingHistory';
+import PaymentResult from './components/PaymentResult';
 import { MOCK_USER } from './constants';
 import { UserRole, Complejo, Cancha, Turno, User } from './types';
 
@@ -17,6 +18,19 @@ const App: React.FC = () => {
   const [selectedComplex, setSelectedComplex] = useState<Complejo | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [pendingTurno, setPendingTurno] = useState<{turno: Partial<Turno>, cancha: Cancha} | null>(null);
+  const [paymentResult, setPaymentResult] = useState<'success' | 'error' | 'pending' | null>(null);
+
+  // Detectar retorno de Mercado Pago
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.includes('/reservas/exito')) {
+      setPaymentResult('success');
+    } else if (path.includes('/reservas/error')) {
+      setPaymentResult('error');
+    } else if (path.includes('/reservas/pendiente')) {
+      setPaymentResult('pending');
+    }
+  }, []);
 
   const handleAuthSuccess = (user: User) => {
     setCurrentUser(user);
@@ -27,6 +41,20 @@ const App: React.FC = () => {
     setCurrentUser(null);
     setSelectedComplex(null);
   };
+
+  // Mostrar resultado de pago si existe
+  if (paymentResult && currentUser) {
+    return (
+      <PaymentResult
+        type={paymentResult}
+        onBackToHome={() => {
+          setPaymentResult(null);
+          setActiveTab('my-bookings');
+          window.history.pushState({}, '', '/');
+        }}
+      />
+    );
+  }
 
   // Si no hay usuario, mostramos la pantalla de login/registro
   if (!currentUser) {
