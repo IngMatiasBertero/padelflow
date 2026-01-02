@@ -19,34 +19,64 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
     nombreComplejo: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     // Validación básica para Dueños en el Registro
-    if (!isLogin && role === UserRole.OWNER) {
-      if (!formData.nombreComplejo) {
-        setError('El nombre del complejo es obligatorio');
-        return;
-      }
-      // Simulamos un código de validación para el dueño (ejemplo: PADEL2024)
-      if (ownerCode !== 'PADEL2024') {
-        setError('El código de activación de dueño es incorrecto o expiró');
-        return;
-      }
+    if (!isLogin && role === UserRole.OWNER && !formData.nombreComplejo) {
+      setError('El nombre del complejo es obligatorio');
+      return;
     }
 
-    // Simulamos la creación/login del usuario
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      email: formData.email || 'usuario@ejemplo.com',
-      nombre: formData.nombre || (isLogin ? 'Usuario Demo' : 'Nuevo Usuario'),
-      telefono: formData.telefono,
-      rol: isLogin ? (formData.email.includes('owner') ? UserRole.OWNER : UserRole.CLIENT) : role,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.nombre || 'default'}`
-    };
-    
-    onAuthSuccess(newUser);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:7001';
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+
+      const body: any = {
+        email: formData.email,
+        password: formData.password,
+      };
+
+      if (!isLogin) {
+        body.nombre = formData.nombre;
+        body.rol = role;
+        if (role === UserRole.OWNER) {
+          body.activationCode = ownerCode;
+        }
+      }
+
+      const response = await fetch(`${apiUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Error en la autenticación');
+      }
+
+      // Guardar token en localStorage
+      localStorage.setItem('token', data.token);
+
+      // Crear objeto de usuario
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email,
+        nombre: data.user.nombre,
+        telefono: data.user.telefono,
+        rol: data.user.rol,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.nombre}`
+      };
+
+      onAuthSuccess(user);
+    } catch (error: any) {
+      setError(error.message);
+    }
   };
 
   return (
