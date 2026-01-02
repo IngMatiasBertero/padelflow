@@ -57,7 +57,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         email: data.email,
         password: hashedPassword,
         nombre: data.nombre,
-        telefono: data.telefono,
+        telefono: data.telefono || '',
         rol: data.rol,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.nombre}`
       }
@@ -70,9 +70,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           nombre: data.nombreComplejo,
           direccion: 'Por configurar',
           ciudad: 'Santiago del Estero',
-          dueno_id: user.id,
+          owner_id: user.id,
           telefono: data.telefono || '',
-          imagen: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=600&fit=crop'
+          imagen: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=600&fit=crop',
+          horario_apertura: '08:00',
+          horario_cierre: '23:00'
         }
       });
     }
