@@ -35,6 +35,9 @@ services:
       NODE_ENV: production
       FRONTEND_URL: ${FRONTEND_URL:-https://padelflow.bertium.net}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
+      OWNER_ACTIVATION_CODE: ${OWNER_ACTIVATION_CODE:-PADELFLOW2024}
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,14 +48,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - API_KEY=${GEMINI_API_KEY}
+        - VITE_API_URL=${API_URL:-https://api.padelflow.bertium.net}
     container_name: padelflow_frontend
     ports:
       - "7000:80"
     restart: unless-stopped
-    environment:
-      - API_KEY=${GEMINI_API_KEY}
-      - VITE_API_URL=${API_URL:-https://api.padelflow.bertium.net}
     depends_on:
       - backend
 
