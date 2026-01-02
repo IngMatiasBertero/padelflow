@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { PrismaClient, TurnoEstado } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth.js';
 import { createPreference, getPaymentInfo } from '../services/mercadopagoService.js';
