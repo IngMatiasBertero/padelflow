@@ -10,9 +10,10 @@ const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   nombre: z.string().min(2),
-  telefono: z.string(),
+  telefono: z.string().optional(),
   rol: z.nativeEnum(UserRole).default(UserRole.CLIENTE),
-  activationCode: z.string().optional()
+  activationCode: z.string().optional(),
+  nombreComplejo: z.string().optional()
 });
 
 const LoginSchema = z.object({
@@ -61,6 +62,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.nombre}`
       }
     });
+
+    // Si es dueño, crear el complejo automáticamente
+    if (data.rol === UserRole.DUENO && data.nombreComplejo) {
+      await prisma.complejo.create({
+        data: {
+          nombre: data.nombreComplejo,
+          direccion: 'Por configurar',
+          ciudad: 'Santiago del Estero',
+          dueno_id: user.id,
+          telefono: data.telefono || '',
+          imagen: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=600&fit=crop'
+        }
+      });
+    }
 
     // Generar token
     const token = generateToken({

@@ -41,8 +41,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
       if (!isLogin) {
         body.nombre = formData.nombre;
         body.rol = role;
+        body.telefono = formData.telefono;
         if (role === UserRole.OWNER) {
           body.activationCode = ownerCode;
+          body.nombreComplejo = formData.nombreComplejo;
         }
       }
 
