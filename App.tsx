@@ -38,11 +38,53 @@ const App: React.FC = () => {
     setShowBookingModal(true);
   };
 
-  const confirmBooking = () => {
-    alert("Reserva confirmada! Redirigiendo a Mercado Pago para la seña...");
-    setShowBookingModal(false);
-    setSelectedComplex(null);
-    setActiveTab('my-bookings');
+  const confirmBooking = async () => {
+    if (!pendingTurno) return;
+
+    try {
+      // Crear el turno en la base de datos
+      const turno = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:7001'}/api/turnos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          cancha_id: pendingTurno.cancha.id,
+          fecha: pendingTurno.turno.fecha,
+          hora_inicio: pendingTurno.turno.hora_inicio
+        })
+      });
+
+      if (!turno.ok) {
+        const error = await turno.json();
+        throw new Error(error.message || 'Error al crear la reserva');
+      }
+
+      const turnoData = await turno.json();
+
+      // Crear preferencia de pago en Mercado Pago
+      const preference = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:7001'}/api/pagos/turnos/${turnoData.id}/preference`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!preference.ok) {
+        const error = await preference.json();
+        throw new Error(error.message || 'Error al crear la preferencia de pago');
+      }
+
+      const preferenceData = await preference.json();
+
+      // Redirigir a Mercado Pago
+      window.location.href = preferenceData.initPoint;
+
+    } catch (error: any) {
+      alert(`Error: ${error.message}`);
+    }
   };
 
   const renderContent = () => {
