@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import complejoRoutes from './routes/complejoRoutes.js';
 import canchaRoutes from './routes/canchaRoutes.js';
 import turnoRoutes from './routes/turnoRoutes.js';
+import pagoRoutes from './routes/pagoRoutes.js';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/complejos', complejoRoutes);
 app.use('/api/canchas', canchaRoutes);
 app.use('/api/turnos', turnoRoutes);
+app.use('/api/pagos', pagoRoutes);
 
 // 404 handler
 app.use((req, res) => {

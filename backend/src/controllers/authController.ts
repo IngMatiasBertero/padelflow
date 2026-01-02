@@ -11,7 +11,8 @@ const RegisterSchema = z.object({
   password: z.string().min(6),
   nombre: z.string().min(2),
   telefono: z.string(),
-  rol: z.nativeEnum(UserRole).default(UserRole.CLIENTE)
+  rol: z.nativeEnum(UserRole).default(UserRole.CLIENTE),
+  activationCode: z.string().optional()
 });
 
 const LoginSchema = z.object({
@@ -22,6 +23,19 @@ const LoginSchema = z.object({
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const data = RegisterSchema.parse(req.body);
+
+    // Si el usuario se registra como dueño, verificar código de activación
+    if (data.rol === UserRole.DUENO) {
+      const validCode = process.env.OWNER_ACTIVATION_CODE || 'PADELFLOW2024';
+
+      if (!data.activationCode || data.activationCode !== validCode) {
+        res.status(403).json({
+          error: 'Código de activación inválido',
+          message: 'Para registrarte como dueño necesitas un código de activación válido'
+        });
+        return;
+      }
+    }
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
