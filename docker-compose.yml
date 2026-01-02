@@ -48,7 +48,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${API_URL:-https://api.padelflow.bertium.net}
+        - VITE_API_URL=${API_URL:-https://apipadel.bertium.net}
     container_name: padelflow_frontend
     ports:
       - "7000:80"
