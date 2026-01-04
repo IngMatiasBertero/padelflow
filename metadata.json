@@ -1,0 +1,7 @@
+{
+  "name": "PadelFlow - Sistema de Gestión de Padel",
+  "description": "Una plataforma integral para la reserva de canchas de padel, gestión de complejos deportivos e integración con Mercado Pago. Diseñada específicamente para Santiago del Estero, Argentina.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
